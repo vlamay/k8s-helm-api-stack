@@ -1,0 +1,110 @@
+# Default values for python-flask-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: python-flask-app # This should be your Docker Hub username / repo name or your private registry
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 5000 # Port where the Flask app runs
+
+ingress:
+  enabled: true # Changed to true to enable by default for this step
+  className: "nginx" # Assuming nginx ingress controller
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod" # Annotation for cert-manager
+    # kubernetes.io/ingress.class: nginx # Common annotation, though className is preferred for newer k8s
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true" # Optional: force HTTPS
+  hosts:
+    - host: python-flask-app.example.com # Replace with your actual domain
+      paths:
+        - path: /
+          pathType: Prefix # Changed to Prefix for broader matching
+  tls:
+   - secretName: python-flask-tls # Name of the secret cert-manager will create/use
+     hosts:
+       - python-flask-app.example.com # Replace with your actual domain
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Sidecar container settings
+sidecar:
+  name: my-sidecar
+  image:
+    repository: busybox
+    tag: latest
+    pullPolicy: IfNotPresent
+  ports: []
+  #  - name: sidecar-port
+  #    containerPort: 8081
+  #    protocol: TCP
+  resources: {}
+  #  limits:
+  #    cpu: 50m
+  #    memory: 64Mi
+  #  requests:
+  #    cpu: 50m
+  #    memory: 64Mi
+  # Example of volume mount for sharing logs - requires a corresponding volume in sidecar.volumes
+  volumeMounts: []
+  #  - name: shared-logs
+  #    mountPath: /var/log/app
+  # Example of a volume definition - to be used by volumeMounts in main or sidecar containers
+  volumes: []
+  #  - name: shared-logs
+  #    emptyDir: {}

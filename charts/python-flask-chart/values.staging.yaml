@@ -1,0 +1,8 @@
+replicaCount: 1
+image:
+  tag: "staging"
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+environment: "staging"

@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: python-flask-app
+  namespace: argocd # Assuming ArgoCD is installed in the 'argocd' namespace
+spec:
+  project: default # Or your specific ArgoCD project
+
+  source:
+    repoURL: 'https://github.com/YOUR_USERNAME/k8s-helm-api-stack.git' # IMPORTANT: Replace with your actual repo URL
+    path: charts/python-flask-chart
+    targetRevision: HEAD # Or a specific branch/tag
+    helm:
+      valueFiles:
+        - values.yaml
+      # You can add specific parameter overrides here if needed
+      # parameters:
+      #   - name: "replicaCount"
+      #     value: "2"
+      #   - name: "image.tag"
+      #     value: "stable"
+
+  destination:
+    server: 'https://kubernetes.default.svc' # Target Kubernetes cluster
+    namespace: python-flask-app-ns # Namespace where the app should be deployed
+
+  syncPolicy:
+    automated: # Optional: enable auto-sync
+      prune: true # Optional: delete resources that are no longer in Git
+      selfHeal: true # Optional: allow ArgoCD to self-heal if state drifts
+    syncOptions:
+      - CreateNamespace=true # Automatically create the namespace if it doesn't exist
+      # - ApplyOutOfSyncOnly=true # Useful for preventing unwanted changes during sync
+      # - PruneLast=true # Ensures that pruning happens last in a sync operation
+      # - ServerSideApply=true # Recommended for newer Kubernetes versions
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m0s
